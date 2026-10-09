@@ -3,88 +3,151 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>连锁门店经营分析看板 · 管培生方向</title>
+<title>连锁门店经营分析看板 · 经营决策驾驶舱</title>
 <style>
+  :root{
+    --bg:#0b1220; --panel:rgba(255,255,255,.035); --panel-hi:rgba(255,255,255,.06);
+    --line:rgba(255,255,255,.09); --line-soft:rgba(255,255,255,.05);
+    --txt:#e6ecf5; --sub:#93a0b5; --faint:#6b7789;
+    --cyan:#38bdf8; --green:#34d399; --amber:#fbbf24; --red:#f87171; --violet:#a78bfa; --blue:#60a5fa;
+  }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family:"Microsoft YaHei","微软雅黑",sans-serif;
-    background:linear-gradient(160deg,#0d1424 0%,#111b30 55%,#0e1728 100%);
-    color:#e5eaf3; min-height:100vh; padding:0 0 28px;
+  html{ -webkit-text-size-adjust:100%; }
+  body { overflow-x:hidden;
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei","微软雅黑",sans-serif;
+    background:
+      radial-gradient(1100px 420px at 78% -120px, rgba(56,189,248,.10), transparent 60%),
+      linear-gradient(160deg,#0d1526 0%,#0e1830 52%,#0b1322 100%);
+    color:var(--txt); min-height:100vh; padding-bottom:34px;
   }
   header {
-    display:flex; justify-content:space-between; align-items:center;
-    padding:16px 28px; border-bottom:1px solid rgba(255,255,255,.08);
-    background:rgba(255,255,255,.02);
+    position:sticky; top:0; z-index:20;
+    display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;
+    padding:13px 26px; border-bottom:1px solid var(--line);
+    background:rgba(11,18,32,.86); backdrop-filter:blur(10px);
   }
-  header h1 { font-size:19px; letter-spacing:1px; }
-  header h1 b { color:#38bdf8; }
-  header p { font-size:11.5px; color:#93a0b5; margin-top:4px; }
-  .badge {
-    font-size:11px; letter-spacing:2px; color:#38bdf8;
-    border:1px solid rgba(56,189,248,.45); border-radius:4px; padding:4px 10px;
-    background:rgba(56,189,248,.08); white-space:nowrap;
+  header h1 { font-size:18px; letter-spacing:.5px; font-weight:700; }
+  header h1 b { color:var(--cyan); font-weight:700; }
+  header p { font-size:11.5px; color:var(--sub); margin-top:3px; }
+  .ctl { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .seg { display:flex; background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:8px; padding:3px; }
+  .seg button {
+    border:0; background:transparent; color:var(--sub); font-size:12px; padding:5px 11px;
+    border-radius:6px; cursor:pointer; font-family:inherit; transition:all .15s;
   }
-  main { max-width:1180px; margin:0 auto; padding:18px 20px 0; }
-  .kpis { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:14px; }
+  .seg button:hover { color:var(--txt); }
+  .seg button.on { background:var(--cyan); color:#08213a; font-weight:700; }
+  .sel-wrap { position:relative; }
+  .sel-wrap select {
+    appearance:none; font-family:inherit; cursor:pointer;
+    background:rgba(255,255,255,.05); border:1px solid var(--line); color:var(--txt);
+    border-radius:8px; padding:7px 30px 7px 12px; font-size:12px;
+  }
+  .sel-wrap select option { background:#111b30; color:var(--txt); }
+  .sel-wrap::after{ content:"▾"; position:absolute; right:10px; top:50%; transform:translateY(-52%); color:var(--sub); font-size:11px; pointer-events:none; }
+  main { max-width:1280px; margin:0 auto; padding:16px 20px 0; }
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:11px; margin-bottom:13px; }
   .kpi {
-    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
-    border-radius:10px; padding:12px 12px 10px; position:relative; overflow:hidden;
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:11px; padding:12px 14px 11px; position:relative; overflow:hidden;
   }
-  .kpi::before { content:""; position:absolute; top:0; left:0; right:0; height:2px; background:#38bdf8; opacity:.7; }
-  .kpi .lab { font-size:11px; color:#93a0b5; }
-  .kpi .val { font-size:21px; font-weight:700; margin-top:4px; font-variant-numeric:tabular-nums; }
-  .kpi .val small { font-size:11px; font-weight:400; color:#93a0b5; margin-left:2px; }
-  .kpi .delta { font-size:10.5px; margin-top:3px; }
-  .up { color:#34d399; } .down { color:#f87171; }
+  .kpi::before { content:""; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--cyan),transparent 78%); opacity:.55; }
+  .kpi .lab { font-size:11px; color:var(--sub); display:flex; align-items:center; gap:5px; }
+  .kpi .tip { color:var(--faint); cursor:help; }
+  .kpi .val { font-size:24px; font-weight:700; margin-top:5px; font-variant-numeric:tabular-nums; letter-spacing:.3px; }
+  .kpi .val small { font-size:11px; font-weight:400; color:var(--sub); margin-left:3px; }
+  .kpi .delta { font-size:11px; margin-top:4px; color:var(--faint); font-variant-numeric:tabular-nums; }
+  .up { color:var(--green); } .down { color:var(--red); } .flat{ color:var(--sub); }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
   .card {
-    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
-    border-radius:12px; padding:16px 18px; margin-bottom:14px;
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:13px; padding:15px 17px 16px; margin-bottom:13px;
+    min-width:0;
   }
-  .card h2 { font-size:14.5px; margin-bottom:12px; color:#e5eaf3; }
-  .card h2 span { font-size:11px; color:#93a0b5; font-weight:400; margin-left:8px; }
-  .legend { font-size:11px; color:#93a0b5; margin-top:8px; }
-  .legend i { display:inline-block; width:9px; height:9px; border-radius:2px; margin:0 4px 0 10px; vertical-align:middle; }
+  .kpi,.dcard,.ms { min-width:0; }
+  .card h2 { font-size:14px; margin-bottom:4px; color:var(--txt); display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; }
+  .card h2 .sub { font-size:10.5px; color:var(--sub); font-weight:400; }
+  .card h2 .tag-r { margin-left:auto; font-size:10px; color:var(--faint); font-weight:400; }
   svg text { font-family:inherit; }
   table { width:100%; border-collapse:collapse; font-size:12px; }
-  th { color:#93a0b5; font-weight:400; text-align:left; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,.1); white-space:nowrap; }
-  td { padding:7px 8px; border-bottom:1px solid rgba(255,255,255,.05); white-space:nowrap; font-variant-numeric:tabular-nums; }
-  tr:last-child td { border-bottom:none; }
+  th { color:var(--sub); font-weight:500; text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); white-space:nowrap; font-size:11px; }
+  td { padding:8px; border-bottom:1px solid var(--line-soft); white-space:nowrap; font-variant-numeric:tabular-nums; }
+  tbody tr:last-child td { border-bottom:none; }
+  tbody tr.clickable { cursor:pointer; transition:background .12s; }
+  tbody tr.clickable:hover { background:var(--panel-hi); }
+  tbody tr.active { background:rgba(56,189,248,.09); box-shadow:inset 2px 0 0 var(--cyan); }
   .num { text-align:right; }
-  .tblwrap { overflow-x:auto; }
-  .bar-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
-  .bar-name { width:110px; font-size:12px; text-align:right; color:#c9d3e0; flex:none; }
-  .bar-meta { width:150px; font-size:10.5px; color:#93a0b5; flex:none; }
-  .bar-track { flex:1; display:flex; height:22px; border-radius:4px; overflow:hidden; background:rgba(255,255,255,.05); }
-  .seg { height:100%; position:relative; }
-  .seg span {
-    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    font-size:9.5px; color:rgba(0,0,0,.75); font-weight:600; white-space:nowrap;
-  }
-  .seg.dark span { color:rgba(255,255,255,.85); }
-  .loss-tag { color:#f87171; font-size:10.5px; }
-  .diag { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
-  .dcard { border-radius:10px; padding:12px 14px; border:1px solid; font-size:12px; line-height:1.65; }
-  .dcard b { display:block; font-size:12.5px; margin-bottom:4px; }
-  .d-red { border-color:rgba(248,113,113,.35); background:rgba(248,113,113,.07); }
-  .d-red b { color:#f87171; }
-  .d-green { border-color:rgba(52,211,153,.35); background:rgba(52,211,153,.07); }
-  .d-green b { color:#34d399; }
-  .d-amber { border-color:rgba(251,191,36,.35); background:rgba(251,191,36,.07); }
-  .d-amber b { color:#fbbf24; }
-  .d-blue { border-color:rgba(56,189,248,.35); background:rgba(56,189,248,.07); }
-  .d-blue b { color:#38bdf8; }
-  .pill { display:inline-block; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:600; }
-  .p-keep { background:rgba(52,211,153,.15); color:#34d399; }
-  .p-less { background:rgba(251,191,36,.15); color:#fbbf24; }
-  .p-stop { background:rgba(248,113,113,.15); color:#f87171; }
-  footer { max-width:1180px; margin:6px auto 0; padding:0 20px; font-size:10.5px; color:#6b7789; line-height:1.7; }
-  @media (max-width:860px){
-    .kpis { grid-template-columns:repeat(3,1fr); }
+  .tblwrap { overflow-x:auto; margin-top:8px; }
+  tfoot td { border-top:1px solid var(--line); border-bottom:none; color:var(--txt); font-weight:600; }
+  .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:1px; }
+  .pill { display:inline-block; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:600; white-space:nowrap; }
+  .p-keep { background:rgba(52,211,153,.14); color:var(--green); }
+  .p-less { background:rgba(251,191,36,.14); color:var(--amber); }
+  .p-stop { background:rgba(248,113,113,.14); color:var(--red); }
+  .p-a { background:rgba(52,211,153,.14); color:var(--green); }
+  .p-b { background:rgba(96,165,250,.14); color:var(--blue); }
+  .p-c { background:rgba(251,191,36,.14); color:var(--amber); }
+  .legend { font-size:10.5px; color:var(--sub); margin-top:10px; display:flex; gap:14px; flex-wrap:wrap; }
+  .legend i { display:inline-block; width:9px; height:9px; border-radius:2px; margin:0 4px 0 2px; vertical-align:-1px; }
+  /* 品类双条 */
+  .cat-row { display:grid; grid-template-columns:86px 1fr 64px; gap:10px; align-items:center; margin:9px 0; font-size:12px; }
+  .cat-name { color:var(--txt); }
+  .cat-bars { display:flex; flex-direction:column; gap:3px; }
+  .cat-track { height:7px; border-radius:4px; background:rgba(255,255,255,.05); overflow:hidden; }
+  .cat-fill { height:100%; border-radius:4px; transition:width .4s; }
+  .cat-gm { text-align:right; font-variant-numeric:tabular-nums; color:var(--sub); font-size:11px; }
+  /* 诊断 */
+  .diag-tags { display:flex; gap:8px; margin:6px 0 12px; flex-wrap:wrap; }
+  .dtag { font-size:11px; padding:3px 10px; border-radius:11px; border:1px solid var(--line); color:var(--sub); cursor:pointer; user-select:none; }
+  .dtag.on { color:var(--txt); border-color:rgba(255,255,255,.3); background:var(--panel-hi); }
+  .diag { display:grid; grid-template-columns:repeat(3,1fr); gap:11px; }
+  .dcard { border-radius:10px; padding:12px 13px; border:1px solid; font-size:12px; line-height:1.7; animation:fade .25s; }
+  @keyframes fade { from{opacity:0; transform:translateY(4px);} to{opacity:1;transform:none;} }
+  .dcard .dh { display:flex; align-items:center; gap:7px; margin-bottom:5px; font-size:12.5px; font-weight:700; }
+  .dcard .dh .kind { margin-left:auto; font-size:9.5px; font-weight:600; padding:1px 7px; border-radius:9px; }
+  .dcard .impact { margin-top:7px; font-size:11px; padding:5px 8px; border-radius:6px; background:rgba(0,0,0,.22); font-variant-numeric:tabular-nums; }
+  .d-red { border-color:rgba(248,113,113,.32); background:rgba(248,113,113,.06); }
+  .d-red .dh { color:var(--red); } .d-red .kind { background:rgba(248,113,113,.16); color:var(--red); }
+  .d-amber { border-color:rgba(251,191,36,.3); background:rgba(251,191,36,.06); }
+  .d-amber .dh { color:var(--amber); } .d-amber .kind { background:rgba(251,191,36,.16); color:var(--amber); }
+  .d-blue { border-color:rgba(56,189,248,.3); background:rgba(56,189,248,.06); }
+  .d-blue .dh { color:var(--cyan); } .d-blue .kind { background:rgba(56,189,248,.16); color:var(--cyan); }
+  .d-green { border-color:rgba(52,211,153,.3); background:rgba(52,211,153,.06); }
+  .d-green .dh { color:var(--green); } .d-green .kind { background:rgba(52,211,153,.16); color:var(--green); }
+  /* mini stat row */
+  .ministats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:12px; }
+  .ms { background:rgba(255,255,255,.03); border:1px solid var(--line-soft); border-radius:9px; padding:9px 11px; }
+  .ms .v { font-size:17px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .ms .l { font-size:10.5px; color:var(--sub); margin-top:2px; }
+  .price-row { display:flex; align-items:center; gap:10px; font-size:12px; padding:7px 0; border-bottom:1px dashed var(--line-soft); }
+  .price-row:last-child { border-bottom:none; }
+  .price-name { width:150px; color:var(--txt); }
+  .price-track { flex:1; height:6px; border-radius:3px; background:rgba(255,255,255,.05); position:relative; }
+  .price-dot { position:absolute; top:50%; width:9px; height:9px; border-radius:50%; transform:translate(-50%,-50%); border:2px solid var(--bg); }
+  .price-mid { position:absolute; left:50%; top:-3px; bottom:-3px; width:1px; background:var(--line); }
+  .price-val { width:132px; text-align:right; color:var(--sub); font-variant-numeric:tabular-nums; font-size:11px; }
+  footer { max-width:1280px; margin:8px auto 0; padding:0 20px; font-size:10.5px; color:var(--faint); line-height:1.9; }
+  footer b { color:var(--sub); font-weight:600; }
+  .scope-note { font-size:11px; color:var(--cyan); border:1px solid rgba(56,189,248,.3); background:rgba(56,189,248,.07); padding:3px 10px; border-radius:11px; display:none; }
+  .scope-note.show { display:inline-block; }
+  @media (max-width:1000px){
+    .kpis { grid-template-columns:repeat(2,1fr); }
+    .grid2 { grid-template-columns:1fr; }
     .diag { grid-template-columns:1fr; }
-    .bar-meta { display:none; }
-    .bar-name { width:88px; font-size:11px; }
-    header { padding:14px 16px; } header h1 { font-size:16px; }
-    main, footer { padding-left:12px; padding-right:12px; }
+    .ministats { grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:640px){
+    header { padding:12px 14px; }
+    header h1 { font-size:15px; }
+    main { padding:13px 12px 0; }
+    footer { padding:0 12px; }
+    .seg button { padding:5px 8px; font-size:11px; }
+  }
+  @media print {
+    body { background:#fff; color:#111; }
+    header { position:static; background:#fff; border-color:#ddd; }
+    .card,.kpi,.ms { background:#fff; border-color:#ddd; }
+    .ctl { display:none; }
   }
 </style>
 </head>
@@ -92,177 +155,714 @@
 <header>
   <div>
     <h1>连锁门店经营分析看板 <b>· 经营决策驾驶舱</b></h1>
-    <p>管培生方向 ｜ 华东区 5 家门店 · 2026 年 9 月经营月报 ｜ 营收 → 毛利 → 费用 → 净利 全链路拆解</p>
+    <p>华东区 5 家门店 ｜ 2026 年 4–9 月 ｜ 营收 → 毛利 → 费用 → 净利 全链路 P&amp;L · 客流 · 库存 · 采购</p>
   </div>
-  <div class="badge">MT-OPS</div>
+  <div class="ctl">
+    <div class="seg" id="monthSeg"></div>
+    <div class="sel-wrap">
+      <select id="storeSel"></select>
+    </div>
+  </div>
 </header>
 <main>
   <section class="kpis" id="kpis"></section>
 
   <section class="card">
-    <h2>近 6 个月营收与净利率趋势 <span>柱：营收（万元·左轴）｜线：净利率（%·右轴）</span></h2>
+    <h2>营收与净利率趋势
+      <span class="sub">柱：营收（万元·左轴）｜线：净利率（%·右轴），点击柱子切换月份</span>
+      <span class="tag-r" id="trendScope"></span>
+    </h2>
     <div id="trend"></div>
+    <div class="legend">
+      <span><i style="background:var(--cyan)"></i>当期营收</span>
+      <span><i style="background:rgba(56,189,248,.22)"></i>其他月份</span>
+      <span><i style="background:var(--amber)"></i>净利率</span>
+    </div>
   </section>
 
   <section class="card">
-    <h2>门店经营对比（本月）</h2>
+    <h2>门店经营对比 <span class="sub">点击行可下钻到单店；同比 = 同店去年同月口径（SSSG）</span>
+      <span class="scope-note" id="scopeNote"></span></h2>
     <div class="tblwrap"><table id="storeTbl"></table></div>
-    <p class="legend">净利率着色：<i style="background:#34d399"></i>≥10% 优秀　<i style="background:#fbbf24"></i>5%–10% 达标　<i style="background:#f87171"></i>&lt;5% 预警</p>
   </section>
 
   <section class="card">
-    <h2>门店损益结构（P&amp;L 占营收比）</h2>
-    <div id="pl"></div>
-    <p class="legend">
-      <i style="background:#64748b"></i>商品成本　<i style="background:#38bdf8"></i>房租/扣点　<i style="background:#a78bfa"></i>人力　<i style="background:#fbbf24"></i>其他费用　<i style="background:#34d399"></i>净利
-    </p>
+    <h2>损益瀑布（P&amp;L Bridge）<span class="sub">营收 → 扣商品成本 → 毛利 → 扣房租/人力/其他 → 净利，单位：万元</span></h2>
+    <div id="waterfall"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card" style="margin-bottom:13px">
+      <h2>品类结构：销售占比 vs 毛利贡献 <span class="sub">全网 · 当月</span></h2>
+      <div id="cats"></div>
+      <div class="legend">
+        <span><i style="background:var(--cyan)"></i>销售占比</span>
+        <span><i style="background:var(--violet)"></i>毛利贡献占比</span>
+      </div>
+    </section>
+    <section class="card" style="margin-bottom:13px">
+      <h2>商品 ABC 与动销 <span class="sub">帕累托：8% 的 SKU 贡献 70% 销售</span></h2>
+      <div id="abc"></div>
+      <div class="ministats" id="invStats"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>供应商采购履约 <span class="sub">全网 · 当月采购口径</span></h2>
+    <div class="tblwrap"><table id="supplierTbl"></table></div>
+    <div class="grid2" style="margin-top:14px">
+      <div>
+        <h2 style="font-size:12.5px;margin-bottom:6px">核心单品进价监控（环比）</h2>
+        <div id="priceWatch"></div>
+      </div>
+      <div>
+        <h2 style="font-size:12.5px;margin-bottom:6px">采购结构</h2>
+        <div class="ministats" id="procStats" style="margin-top:4px"></div>
+      </div>
+    </div>
   </section>
 
   <section class="card">
-    <h2>促销活动 ROI 复盘 <span>ROI = 增量营收 ÷ 活动投入（增量口径：活动期营收 − 同期基线）</span></h2>
+    <h2>促销活动 ROI 复盘 <span class="sub">ROI = 增量毛利 ÷ 活动投入（增量营收按活动期 − 同期基线测算，经毛利率折算）</span></h2>
     <div class="tblwrap"><table id="promo"></table></div>
   </section>
 
   <section class="card">
-    <h2>经营诊断与行动建议 <span>规则引擎自动生成</span></h2>
+    <h2>经营诊断与行动建议 <span class="sub">规则引擎随月份 / 门店联动，按影响金额排序</span></h2>
+    <div class="diag-tags" id="diagTags"></div>
     <div class="diag" id="diag"></div>
   </section>
 </main>
 <footer>
-  数据说明：本页为<b>脱敏演示数据</b>（门店字段结构按连锁零售经营月报设计，确定性生成、可复现）。
-  真实使用时将各门店月报按「门店/面积/人数/营收/毛利率/房租/人力/其他费用」字段替换数据源即可，诊断规则与展示逻辑无需改动。
+  <b>指标口径：</b>坪效＝当月营收÷营业面积（元/㎡/月）；人效＝当月营收÷在岗人数（元/人/月）；客单价＝营收÷交易笔数；转化率＝交易笔数÷进店客流；
+  连带率＝销售件数÷交易笔数；库存周转天数＝期末库存（成本口径）÷当月销售成本×30；库销比＝期末库存÷当月营收；同店同比（SSSG）剔除当期开关店影响。<br>
+  <b>决策阈值：</b>净利率 ≥10% 优秀 / 5–10% 达标 / &lt;5% 预警；促销毛利 ROI ≥1 保持复制 / 0.5–1 缩量观察 / &lt;0.5 停投改造；供应商到货率 &lt;95% 启动整改。<br>
+  <b>数据说明：</b>本页为脱敏演示数据（华东区 5 家虚构门店，字段结构按连锁零售经营月报设计，确定性生成、可复现）。真实使用时按门店月报字段替换数据源即可，诊断规则与展示逻辑无需改动。
 </footer>
 
 <script>
+"use strict";
+/* ================= 数据层：5 店 × 6 个月（2026-04 ~ 2026-09） ================= */
+const MONTHS = ["4月","5月","6月","7月","8月","9月"];
+const MCODES = ["2026-04","2026-05","2026-06","2026-07","2026-08","2026-09"];
+
 const STORES = [
-  { name:"A·城市旗舰店", area:380, staff:22, rev:98.0, gm:0.41, rent:13.5, labor:15.4, other:5.2 },
-  { name:"B·社区标准店", area:220, staff:12, rev:63.0, gm:0.43, rent:6.2,  labor:8.4,  other:3.1 },
-  { name:"C·商场中岛店", area:80,  staff:5,  rev:31.0, gm:0.39, rent:4.6,  labor:3.5,  other:2.6 },
-  { name:"D·老城区店",   area:260, staff:14, rev:41.0, gm:0.40, rent:5.8,  labor:9.8,  other:3.4 },
-  { name:"E·奥莱折扣店", area:300, staff:13, rev:72.0, gm:0.31, rent:5.5,  labor:9.1,  other:3.8 },
+  { id:"A", name:"A·城市旗舰店", type:"旗舰店", area:380, staff:22, sku:4200, sellRate:.82, member:.46, rebuy:.35, yoy:.065, upt:2.6,
+    rev:[84,88,82,89,92,98], gm:[40.5,40.8,40.6,40.7,40.9,41.0],
+    rent:[13.5,13.5,13.5,13.5,13.5,13.5], labor:[15.0,15.1,15.2,15.3,15.3,15.4], other:[5.0,5.1,5.0,5.1,5.2,5.2],
+    aov:[148,150,146,150,151,152], conv:[7.6,7.9,7.5,7.8,7.9,8.0], days:[42,40,41,40,39,38] },
+  { id:"B", name:"B·社区标准店", type:"社区店", area:220, staff:12, sku:2600, sellRate:.86, member:.52, rebuy:.38, yoy:.120, upt:2.4,
+    rev:[50,52,52,56,59,63], gm:[42.0,42.4,42.2,42.6,42.8,43.0],
+    rent:[6.2,6.2,6.2,6.2,6.2,6.2], labor:[8.0,8.1,8.2,8.3,8.3,8.4], other:[3.0,3.0,3.1,3.1,3.0,3.1],
+    aov:[122,124,125,126,127,128], conv:[9.0,9.2,9.1,9.3,9.4,9.5], days:[35,34,34,33,32,32] },
+  { id:"C", name:"C·商场中岛店", type:"中岛店", area:80,  staff:5,  sku:1200, sellRate:.79, member:.35, rebuy:.30, yoy:.090, upt:1.8,
+    rev:[24,26,26,27,29,31], gm:[38.5,38.6,38.4,38.8,38.9,39.0],
+    rent:[4.6,4.6,4.6,4.6,4.6,4.6], labor:[3.4,3.4,3.5,3.5,3.5,3.5], other:[2.5,2.5,2.6,2.6,2.6,2.6],
+    aov:[92,93,93,94,95,96], conv:[11.4,11.6,11.5,11.8,11.9,12.0], days:[28,27,27,26,26,26] },
+  { id:"D", name:"D·老城区店",   type:"老店",   area:260, staff:14, sku:3100, sellRate:.61, member:.40, rebuy:.26, yoy:-.055, upt:2.2,
+    rev:[42,41,38,39,40,41], gm:[40.2,40.0,39.9,40.1,40.0,40.0],
+    rent:[5.8,5.8,5.8,5.8,5.8,5.8], labor:[9.6,9.7,9.7,9.8,9.8,9.8], other:[3.3,3.4,3.4,3.4,3.4,3.4],
+    aov:[120,119,117,118,118,118], conv:[7.0,6.9,6.6,6.7,6.6,6.5], days:[52,53,55,56,57,58] },
+  { id:"E", name:"E·奥莱折扣店", type:"折扣店", area:300, staff:13, sku:5400, sellRate:.74, member:.30, rebuy:.23, yoy:.180, upt:3.1,
+    rev:[52,54,50,62,62,72], gm:[30.5,30.8,30.2,30.6,30.9,31.0],
+    rent:[5.5,5.5,5.5,5.5,5.5,5.5], labor:[8.8,8.9,9.0,9.0,9.1,9.1], other:[3.6,3.7,3.7,3.8,3.8,3.8],
+    aov:[205,206,202,208,209,210], conv:[6.8,6.9,6.7,6.9,7.0,7.0], days:[48,47,47,46,46,45] },
 ];
-const TREND = { m:["4月","5月","6月","7月","8月","9月"], rev:[252,261,248,273,282,305], npm:[5.1,5.4,4.8,5.6,5.9,6.0] };
+
+/* 品类（全网结构，销售占比 / 毛利率 / 9月环比占比变动 pp） */
+const CATS = [
+  { n:"生鲜",     share:.24, gm:.28, dShare:+.6 },
+  { n:"食品饮料", share:.21, gm:.35, dShare:+.3 },
+  { n:"日用百货", share:.19, gm:.42, dShare:-.1 },
+  { n:"美妆个护", share:.15, gm:.50, dShare:+.2 },
+  { n:"家居家纺", share:.13, gm:.45, dShare:-.7 },
+  { n:"母婴宠物等", share:.08, gm:.42, dShare:-.3 },
+];
+
+/* 供应商（9月，采购额单位万元；占采购总额比在渲染时按当月 COGS 动态折算） */
+const SUPPLIERS = [
+  { n:"鑫海生鲜供应链",  amt:42, term:30, arrive:98.2, pass:99.1, grade:"A", note:"核心战略供应商，账期可谈至45天" },
+  { n:"恒润食品",        amt:36, term:45, arrive:96.8, pass:98.4, grade:"A", note:"履约稳定，联合促销资源位" },
+  { n:"优品百货贸易",    amt:28, term:60, arrive:94.5, pass:97.2, grade:"B", note:"到货率低于95%，扣罚条款已触发" },
+  { n:"悦美美妆供应链",  amt:24, term:30, arrive:97.6, pass:99.5, grade:"A", note:"高毛利品类，争取增加返点" },
+  { n:"南方家居集采",    amt:20, term:45, arrive:91.2, pass:96.0, grade:"C", note:"连续2月到货率垫底，引入备选" },
+];
+
+/* 核心单品进价监控（元；up=涨价/对采购不利） */
+const PRICES = [
+  { n:"鲜鸡蛋（元/斤）",   cur:4.05, prev:4.20 },
+  { n:"纯牛奶（元/箱）",   cur:54.0, prev:52.0 },
+  { n:"东北大米（元/斤）", cur:2.80, prev:2.85 },
+  { n:"洗衣液3kg（元/瓶）",cur:18.2, prev:18.6 },
+  { n:"抽纸（元/箱）",     cur:65.0, prev:62.0 },
+];
+
+/* 促销复盘（9月档） */
 const PROMOS = [
-  { n:"618 年中大促",     cost:8.5, inc:26.0 },
-  { n:"会员日双倍积分",   cost:2.6, inc:7.4  },
-  { n:"新品首发折扣",     cost:5.5, inc:8.9  },
-  { n:"清仓满减",         cost:4.2, inc:5.6  },
+  { n:"开学季满减",       cost:8.5, inc:26.0, igm:.34, redeem:62 },
+  { n:"会员日双倍积分",   cost:2.6, inc:7.4,  igm:.38, redeem:71 },
+  { n:"秋季新品首发",     cost:5.5, inc:8.9,  igm:.42, redeem:28 },
+  { n:"夏末清仓",         cost:4.2, inc:5.6,  igm:.18, redeem:45 },
 ];
-const REV_ENV = "+8.2%", NPM_ENV = "+0.1pp", GM_ENV = "+0.1pp", REBUY = "31.4%", REBUY_ENV = "+2.1pp";
 
-// 派生指标
+/* ================= 派生指标 ================= */
 STORES.forEach(s => {
-  s.gp  = s.rev * s.gm;                       // 毛利（万）
-  s.np  = s.gp - s.rent - s.labor - s.other;  // 净利（万）
-  s.npm = s.np / s.rev * 100;                 // 净利率 %
-  s.psf = s.rev * 10000 / s.area;             // 坪效 元/㎡/月
-  s.eff = s.rev * 10000 / s.staff;            // 人效 元/人/月
+  s.m = MCODES.map((_,j)=>{
+    const rev=s.rev[j], gp=rev*s.gm[j]/100, cogs=rev-gp;
+    const np=gp-s.rent[j]-s.labor[j]-s.other[j];
+    const orders=rev*10000/s.aov[j];
+    const visits=orders/(s.conv[j]/100);
+    const inv=cogs*s.days[j]/30;                 // 期末库存（成本口径，万元）
+    return {
+      rev, gp, cogs, np,
+      npm:np/rev*100,
+      rent:s.rent[j], labor:s.labor[j], other:s.other[j],
+      orders, visits,
+      aov:s.aov[j], conv:s.conv[j], upt:s.upt,
+      items:orders*s.upt,
+      psf:rev*10000/s.area,
+      eff:rev*10000/s.staff,
+      inv, turn:s.days[j],
+      isr:inv/rev,                               // 库销比（成本/零售）
+      slow:Math.round(s.sku*(1-s.sellRate)),
+      gm:s.gm[j],
+    };
+  });
 });
-const T = {
-  rev:  STORES.reduce((a,s)=>a+s.rev,0),
-  gp:   STORES.reduce((a,s)=>a+s.gp,0),
-  np:   STORES.reduce((a,s)=>a+s.np,0),
-  area: STORES.reduce((a,s)=>a+s.area,0),
-  staff:STORES.reduce((a,s)=>a+s.staff,0),
-};
-T.gmRate = T.gp/T.rev*100; T.npmRate = T.np/T.rev*100;
-T.psf = T.rev*10000/T.area; T.eff = T.rev*10000/T.staff;
-const avgGm = T.gmRate;
 
-const fmt = (n,d=1)=>n.toFixed(d);
-const el = id => document.getElementById(id);
+function scopeAt(idx, scope){
+  // scope: "all" 或门店 id
+  if(scope!=="all"){
+    const s=STORES.find(x=>x.id===scope);
+    const x=s.m[idx];
+    return {
+      isAll:false, store:s,
+      rev:x.rev, gp:x.gp, cogs:x.cogs, np:x.np, npm:x.npm,
+      gmRate:x.gm, rent:x.rent, labor:x.labor, other:x.other,
+      area:s.area, staff:s.staff, orders:x.orders, visits:x.visits,
+      aov:x.aov, conv:x.conv, upt:x.upt, items:x.items,
+      psf:x.psf, eff:x.eff, inv:x.inv, turn:x.turn, isr:x.isr,
+      sku:s.sku, sellRate:s.sellRate, slow:x.slow,
+      member:s.member, rebuy:s.rebuy,
+      yoyRev: s.rev[idx]/(1+s.yoy),
+    };
+  }
+  const arr=STORES.map(s=>s.m[idx]);
+  const sum=k=>arr.reduce((a,x)=>a+x[k],0);
+  const rev=sum("rev"), gp=sum("gp"), cogs=sum("cogs"), np=sum("np"),
+        rent=sum("rent"), labor=sum("labor"), other=sum("other"),
+        orders=sum("orders"), visits=sum("visits"), inv=sum("inv"), items=sum("items");
+  const area=STORES.reduce((a,s)=>a+s.area,0), staff=STORES.reduce((a,s)=>a+s.staff,0);
+  const sku=STORES.reduce((a,s)=>a+s.sku,0);
+  const slow=arr.reduce((a,x)=>a+x.slow,0);
+  const prevRev=idx>0 ? STORES.reduce((a,s)=>a+s.rev[idx-1],0) : null;
+  const lyRev=STORES.reduce((a,s)=>a+s.rev[idx]/(1+s.yoy),0);
+  return {
+    isAll:true,
+    rev, gp, cogs, np, npm:np/rev*100,
+    gmRate:gp/rev*100, rent, labor, other,
+    area, staff, orders, visits,
+    aov:rev*10000/orders, conv:orders/visits*100, upt:items/orders, items,
+    psf:rev*10000/area, eff:rev*10000/staff, inv, turn:inv/cogs*30, isr:inv/rev,
+    sku, sellRate:(sku-slow)/sku, slow,
+    member:STORES.reduce((a,s)=>a+s.member*s.rev[idx],0)/rev,
+    rebuy:STORES.reduce((a,s)=>a+s.rebuy*s.rev[idx],0)/rev,
+    prevRev, lyRev,
+  };
+}
 
-/* ---------- KPI ---------- */
-el("kpis").innerHTML = [
-  ["本月营收", fmt(T.rev), "万", REV_ENV, true],
-  ["毛利率", fmt(T.gmRate)+"%", "", GM_ENV, true],
-  ["净利率", fmt(T.npmRate)+"%", "", NPM_ENV, true],
-  ["坪效", fmt(T.psf,0), "元/㎡/月", "5店对比", false],
-  ["人效", fmt(T.eff/10000,2), "万/人/月", "5店对比", false],
-  ["会员复购率", REBUY, "", REBUY_ENV, true],
-].map(k=>`<div class="kpi"><div class="lab">${k[0]}</div><div class="val">${k[1]}<small>${k[2]}</small></div><div class="delta ${k[4]?"up":""}">${k[3]}</div></div>`).join("");
+/* ================= 状态与渲染 ================= */
+const state = { month:5, scope:"all", diagFilter:"all" };
+const $ = id => document.getElementById(id);
+const f1 = n => (Math.round(n*10)/10).toLocaleString("zh-CN",{minimumFractionDigits:1,maximumFractionDigits:1});
+const f0 = n => Math.round(n).toLocaleString("zh-CN");
+const pct = (n,d=1) => n.toFixed(d) + "%";
+const ppm = n => (n>=0?"+":"") + f1(n) + "pp";
+const pPct = n => (n>=0?"+":"") + f1(n*100) + "%";
+const npmColor = v => v>=10?"var(--green)":v>=5?"var(--amber)":"var(--red)";
+const deltaCls = (n,betterUp=true) => n>0.001 ? (betterUp?"up":"down") : n<-0.001 ? (betterUp?"down":"up") : "flat";
+function deltaTxt(cur, prev, unit="%", betterUp=true, pp=false){
+  if(prev===null || prev===undefined) return '<span class="flat">环比 —</span>';
+  const d = pp ? cur-prev : cur/prev-1;
+  const cls = deltaCls(d,betterUp);
+  const arrow = d>0.001?"▲":d<-0.001?"▼":"—";
+  return `<span class="${cls}">${arrow} ${pp?f1(d)+"pp":pPct(d)}</span>`;
+}
 
-/* ---------- 趋势图（双轴：营收柱 + 净利率线） ---------- */
-(function(){
-  const W=720,H=230,L=52,R=52,TP=18,BP=30;
-  const iw=W-L-R, ih=H-TP-BP, n=TREND.m.length;
-  const rMax=320, pMax=8;
-  const bw=iw/n*0.5;
-  let s=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">`;
+function renderControls(){
+  $("monthSeg").innerHTML = MONTHS.map((m,i)=>`<button data-m="${i}" class="${i===state.month?'on':''}">${m}</button>`).join("");
+  $("storeSel").innerHTML = `<option value="all">全网 5 店汇总</option>` +
+    STORES.map(s=>`<option value="${s.id}" ${s.id===state.scope?'selected':''}>${s.name}</option>`).join("");
+}
+
+function kpiCard(lab,val,unit,deltaHtml,tip){
+  return `<div class="kpi"><div class="lab">${lab}${tip?` <span class="tip" title="${tip}">ⓘ</span>`:""}</div>
+    <div class="val">${val}<small>${unit||""}</small></div><div class="delta">${deltaHtml}</div></div>`;
+}
+
+function renderKpis(){
+  const i=state.month, sc=scopeAt(i,state.scope);
+  const prev = i>0 ? scopeAt(i-1,state.scope) : null;
+  const cards=[];
+  // 营收：环比 + 同比
+  let revDelta = "环比 —";
+  if(prev){
+    const mom=sc.rev/prev.rev-1;
+    const cls=deltaCls(mom,true), arrow=mom>0?"▲":mom<0?"▼":"—";
+    let yoyTxt="";
+    if(sc.isAll){ yoyTxt=`　同比 <span class="${deltaCls(sc.rev/sc.lyRev-1,true)}">${pPct(sc.rev/sc.lyRev-1)}</span>`; }
+    else { const ly=sc.store.rev[i]/(1+sc.store.yoy); yoyTxt=`　同比 <span class="${deltaCls(sc.rev/ly-1,true)}">${pPct(sc.rev/ly-1)}</span>`; }
+    revDelta=`<span class="${cls}">${arrow} ${pPct(mom)}</span>${yoyTxt}`;
+  }
+  cards.push(kpiCard("营业收入", f1(sc.rev), "万元", revDelta, "当月含税营收；同店同比（SSSG）剔除开关店影响"));
+  cards.push(kpiCard("客单价", f0(sc.aov), "元/单",
+    prev?`环比 ${deltaTxt(sc.aov,prev.aov,"%",true,false)}`:"环比 —", "营收 ÷ 交易笔数"));
+  cards.push(kpiCard("进店转化率", f1(sc.conv), "%",
+    prev?`环比 ${deltaTxt(sc.conv,prev.conv,"%",true,true)}`:"环比 —", "交易笔数 ÷ 进店客流；反映陈列/排班/选品效率"));
+  cards.push(kpiCard("会员复购率", f1(sc.rebuy*100), "%",
+    prev?`环比 ${deltaTxt(sc.rebuy*100,prev.rebuy*100,"%",true,true)}`:"环比 —", "90 天内二次消费会员占比（按营收加权）"));
+  cards.push(kpiCard("毛利率", f1(sc.gmRate), "%",
+    prev?`环比 ${deltaTxt(sc.gmRate,prev.gmRate,"%",true,true)}`:"环比 —", "毛利 ÷ 营收；受品类结构与折扣深度影响"));
+  cards.push(kpiCard("净利率", f1(sc.npm), "%",
+    prev?`环比 ${deltaTxt(sc.npm,prev.npm,"%",true,true)}`:"环比 —", "净利 ÷ 营收，P&L 最终结果"));
+  cards.push(kpiCard("坪效 / 人效", f0(sc.psf), "元/㎡·月",
+    `<span style="color:var(--sub)">人效 <b style="color:var(--txt)">${f1(sc.eff/10000)}</b> 万/人·月</span>`,
+    "坪效＝营收÷面积；人效＝营收÷在岗人数"));
+  const turnCls = sc.turn<=35?"up":sc.turn<=50?"flat":"down";
+  const turnTxt = sc.turn<=35?"健康":sc.turn<=50?"偏慢":"预警";
+  cards.push(kpiCard("库存周转天数", f0(sc.turn), "天",
+    `${prev?`环比 <span class="${deltaCls(prev.turn-sc.turn,true)}">${sc.turn-prev.turn>=0?"+":""}${f1(sc.turn-prev.turn)}天</span>　`:""}<span class="${turnCls}">${turnTxt}</span>`,
+    "期末库存（成本）÷月销售成本×30；越短资金效率越高"));
+  $("kpis").innerHTML=cards.join("");
+}
+
+/* ---------- 趋势双轴图 ---------- */
+function renderTrend(){
+  const W=760,H=250,L=52,R=52,TP=22,BP=32, iw=W-L-R, ih=H-TP-BP, n=MONTHS.length;
+  const maxRev=Math.max(...MONTHS.map((_,k)=>scopeAt(k,state.scope).rev));
+  const rMax=Math.ceil(maxRev/40)*40, pMax=8;
+  const bw=iw/n*.46;
+  let s=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" role="img">`;
   for(let i=0;i<=4;i++){
     const y=TP+ih-ih*i/4;
     s+=`<line x1="${L}" y1="${y}" x2="${W-R}" y2="${y}" stroke="rgba(255,255,255,.07)"/>`;
-    s+=`<text x="${L-8}" y="${y+4}" fill="#93a0b5" font-size="10" text-anchor="end">${rMax*i/4}</text>`;
-    s+=`<text x="${W-R+8}" y="${y+4}" fill="#38bdf8" font-size="10">${(pMax*i/4).toFixed(0)}%</text>`;
+    s+=`<text x="${L-8}" y="${y+3.5}" fill="#93a0b5" font-size="10" text-anchor="end">${Math.round(rMax*i/4)}</text>`;
+    s+=`<text x="${W-R+8}" y="${y+3.5}" fill="#fbbf24" font-size="10">${pMax*i/4}%</text>`;
   }
-  TREND.m.forEach((mo,i)=>{
-    const x=L+iw*(i+0.5)/n, h=TREND.rev[i]/rMax*ih, y=TP+ih-h;
-    s+=`<rect x="${x-bw/2}" y="${y}" width="${bw}" height="${h}" rx="3" fill="rgba(56,189,248,.35)" stroke="rgba(56,189,248,.8)"/>`;
-    s+=`<text x="${x}" y="${y-5}" fill="#c9d3e0" font-size="10.5" text-anchor="middle">${TREND.rev[i]}</text>`;
-    s+=`<text x="${x}" y="${H-10}" fill="#93a0b5" font-size="10.5" text-anchor="middle">${mo}</text>`;
+  const pts=[];
+  MONTHS.forEach((mo,i)=>{
+    const sc=scopeAt(i,state.scope);
+    const x=L+iw*(i+.5)/n, h=sc.rev/rMax*ih, y=TP+ih-h;
+    const active=i===state.month;
+    s+=`<rect class="mbar" data-m="${i}" x="${x-bw/2}" y="${y}" width="${bw}" height="${h}" rx="3" style="cursor:pointer"
+         fill="${active?"#38bdf8":"rgba(56,189,248,.25)"}" stroke="${active?"#7dd3fc":"rgba(56,189,248,.5)"}"><title>${MCODES[i]} 营收 ${f1(sc.rev)} 万｜净利率 ${f1(sc.npm)}%（点击切换）</title></rect>`;
+    s+=`<text x="${x}" y="${y-5}" fill="${active?"#e6ecf5":"#93a0b5"}" font-size="10.5" text-anchor="middle">${f1(sc.rev)}</text>`;
+    s+=`<text x="${x}" y="${H-11}" fill="${active?"#38bdf8":"#93a0b5"}" font-size="${active?11.5:10.5}" text-anchor="middle" font-weight="${active?700:400}">${mo}</text>`;
+    pts.push([x, TP+ih-sc.npm/pMax*ih, sc.npm]);
   });
-  const pts=TREND.npm.map((v,i)=>[L+iw*(i+0.5)/n, TP+ih-v/pMax*ih]);
-  s+=`<polyline points="${pts.map(p=>p.join(",")).join(" ")}" fill="none" stroke="#fbbf24" stroke-width="2.5"/>`;
+  s+=`<polyline points="${pts.map(p=>p[0]+","+p[1]).join(" ")}" fill="none" stroke="#fbbf24" stroke-width="2.2" opacity=".9"/>`;
   pts.forEach((p,i)=>{
-    s+=`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#fbbf24" stroke="#0d1424" stroke-width="1.5"/>`;
-    s+=`<text x="${p[0]}" y="${p[1]-9}" fill="#fbbf24" font-size="10" text-anchor="middle">${TREND.npm[i].toFixed(1)}%</text>`;
+    s+=`<circle cx="${p[0]}" cy="${p[1]}" r="${i===state.month?4.5:3.5}" fill="#fbbf24" stroke="#0d1526" stroke-width="1.5"/>`;
+    s+=`<text x="${p[0]}" y="${p[1]-9}" fill="#fbbf24" font-size="9.5" text-anchor="middle">${f1(p[2])}%</text>`;
   });
-  el("trend").innerHTML=s+"</svg>";
-})();
+  $("trend").innerHTML=s+"</svg>";
+  $("trendScope").textContent = state.scope==="all" ? "全网口径" : STORES.find(x=>x.id===state.scope).name;
+}
 
 /* ---------- 门店对比表 ---------- */
-const colorOf = v => v>=10?"#34d399":(v>=5?"#fbbf24":"#f87171");
-el("storeTbl").innerHTML = `<thead><tr>
-  <th>门店</th><th class="num">面积㎡</th><th class="num">人数</th><th class="num">营收(万)</th>
-  <th class="num">毛利率</th><th class="num">净利率</th><th class="num">坪效(元/㎡)</th><th class="num">人效(万/人)</th></tr></thead><tbody>`
- + STORES.map(x=>`<tr><td>${x.name}</td><td class="num">${x.area}</td><td class="num">${x.staff}</td>
-   <td class="num">${fmt(x.rev)}</td><td class="num">${fmt(x.gm*100)}%</td>
-   <td class="num" style="color:${colorOf(x.npm)};font-weight:700">${fmt(x.npm)}%</td>
-   <td class="num">${fmt(x.psf,0)}</td><td class="num">${fmt(x.eff/10000,2)}</td></tr>`).join("")
- + `<tr style="color:#c9d3e0"><td><b>合计/均值</b></td><td class="num">${T.area}</td><td class="num">${T.staff}</td>
-   <td class="num"><b>${fmt(T.rev)}</b></td><td class="num">${fmt(T.gmRate)}%</td>
-   <td class="num" style="color:${colorOf(T.npmRate)}"><b>${fmt(T.npmRate)}%</b></td>
-   <td class="num">${fmt(T.psf,0)}</td><td class="num">${fmt(T.eff/10000,2)}</td></tr></tbody>`;
+function renderStoreTable(){
+  const i=state.month;
+  const net=scopeAt(i,"all");
+  const rows=STORES.map(s=>{
+    const x=s.m[i], y= s.rev[i]/(1+s.yoy);
+    return { s, x, yoy:x.rev/y-1, mom:i>0?x.rev/s.rev[i-1]-1:null };
+  });
+  const momAll = i>0 ? net.rev/net.prevRev-1 : null;
+  const yoyAll = net.rev/net.lyRev-1;
+  const head=`<thead><tr>
+    <th>门店</th><th class="num">营收(万)</th><th class="num">环比</th><th class="num">同比</th>
+    <th class="num">客单价</th><th class="num">转化率</th><th class="num">毛利率</th>
+    <th class="num">净利率</th><th class="num">坪效(元/㎡)</th><th class="num">人效(万/人)</th><th class="num">周转(天)</th><th>评级</th></tr></thead>`;
+  const body=rows.map(r=>{
+    const x=r.x;
+    const grade = x.npm>=10?'<span class="dot" style="background:var(--green)"></span>优秀'
+      : x.npm>=5?'<span class="dot" style="background:var(--amber)"></span>达标'
+      : '<span class="dot" style="background:var(--red)"></span>预警';
+    return `<tr class="clickable ${state.scope===r.s.id?'active':''}" data-store="${r.s.id}">
+      <td>${r.s.name}<span style="color:var(--faint);font-size:10px;margin-left:6px">${r.s.type}</span></td>
+      <td class="num">${f1(x.rev)}</td>
+      <td class="num ${r.mom===null?'flat':deltaCls(r.mom,true)}">${r.mom===null?"—":pPct(r.mom)}</td>
+      <td class="num ${deltaCls(r.yoy,true)}">${pPct(r.yoy)}</td>
+      <td class="num">${f0(x.aov)}</td>
+      <td class="num">${f1(x.conv)}%</td>
+      <td class="num">${f1(x.gm)}%</td>
+      <td class="num" style="color:${npmColor(x.npm)};font-weight:700">${f1(x.npm)}%</td>
+      <td class="num">${f0(x.psf)}</td>
+      <td class="num">${f1(x.eff/10000)}</td>
+      <td class="num" style="color:${x.turn<=35?'var(--green)':x.turn<=50?'var(--sub)':'var(--red)'}">${f0(x.turn)}</td>
+      <td>${grade}</td></tr>`;
+  }).join("");
+  const foot=`<tfoot><tr>
+    <td>全网合计 / 均值</td><td class="num">${f1(net.rev)}</td>
+    <td class="num ${momAll===null?'flat':deltaCls(momAll,true)}">${momAll===null?"—":pPct(momAll)}</td>
+    <td class="num ${deltaCls(yoyAll,true)}">${pPct(yoyAll)}</td>
+    <td class="num">${f0(net.aov)}</td><td class="num">${f1(net.conv)}%</td>
+    <td class="num">${f1(net.gmRate)}%</td>
+    <td class="num" style="color:${npmColor(net.npm)}">${f1(net.npm)}%</td>
+    <td class="num">${f0(net.psf)}</td><td class="num">${f1(net.eff/10000)}</td>
+    <td class="num">${f0(net.turn)}</td><td>—</td></tr></tfoot>`;
+  $("storeTbl").innerHTML=head+"<tbody>"+body+"</tbody>"+foot;
+  $("scopeNote").textContent = state.scope==="all" ? "" : "已下钻："+STORES.find(x=>x.id===state.scope).name+"（再点该行返回全网）";
+  $("scopeNote").className = "scope-note"+(state.scope==="all"?"":" show");
+}
 
-/* ---------- P&L 结构条 ---------- */
-el("pl").innerHTML = STORES.map(x=>{
-  const cost=(x.rev-x.gp)/x.rev*100, rent=x.rent/x.rev*100, lab=x.labor/x.rev*100,
-        oth=x.other/x.rev*100, np=Math.max(x.np,0)/x.rev*100;
-  const total=cost+rent+lab+oth+np, k=100/Math.max(total,100);
-  const seg=(share,color,label,dark)=>share>3?`<div class="seg ${dark?"dark":""}" style="width:${share*k}%;background:${color}"><span>${label}</span></div>`:`<div class="seg" style="width:${share*k}%;background:${color}"></div>`;
-  const loss=x.np<0?`<span class="loss-tag">净利率 ${fmt(x.npm)}% 亏损</span>`:``;
-  return `<div class="bar-row"><div class="bar-name">${x.name}</div>
-    <div class="bar-track">
-      ${seg(cost,"#64748b","成本 "+fmt(cost,0)+"%",true)}
-      ${seg(rent,"#38bdf8","房租 "+fmt(rent,0)+"%")}
-      ${seg(lab,"#a78bfa","人力 "+fmt(lab,0)+"%",true)}
-      ${seg(oth,"#fbbf24","其他 "+fmt(oth,0)+"%")}
-      ${np>0?seg(np,"#34d399","净利 "+fmt(np,0)+"%"):""}
-    </div><div class="bar-meta">${loss||`净利率 <b style="color:${colorOf(x.npm)}">${fmt(x.npm)}%</b>`}</div></div>`;
-}).join("");
+/* ---------- P&L 瀑布 ---------- */
+function renderWaterfall(){
+  const sc=scopeAt(state.month,state.scope);
+  const steps=[
+    { n:"营业收入", v:sc.rev, type:"tot" },
+    { n:"商品成本", v:-sc.cogs, type:"dec" },
+    { n:"毛利", v:sc.gp, type:"sub" },
+    { n:"房租/扣点", v:-sc.rent, type:"dec" },
+    { n:"人力成本", v:-sc.labor, type:"dec" },
+    { n:"其他费用", v:-sc.other, type:"dec" },
+    { n:"净利润", v:sc.np, type:"tot" },
+  ];
+  const W=760,H=240,L=46,R=14,TP=26,BP=44, iw=W-L-R, ih=H-TP-BP;
+  const vMax=sc.rev*1.08, vMin=Math.min(0,sc.np)*1.15;
+  const yOf = v => TP+ih-(v-vMin)/(vMax-vMin)*ih;
+  const slot=iw/steps.length, bw=slot*.52;
+  let s=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">`;
+  const zeroY=yOf(0);
+  s+=`<line x1="${L}" y1="${zeroY}" x2="${W-R}" y2="${zeroY}" stroke="rgba(255,255,255,.25)"/>`;
+  s+=`<text x="${L-6}" y="${zeroY+3.5}" fill="#93a0b5" font-size="9.5" text-anchor="end">0</text>`;
+  let running=0;
+  steps.forEach((st,k)=>{
+    const x=L+slot*k+slot*.5;
+    let yTop,yBot,color,labelVal;
+    if(st.type==="dec"){
+      yTop=yOf(running+st.v); yBot=yOf(running); running+=st.v;
+      color="#f87171";
+      s+=`<line x1="${x-bw/2-6}" y1="${yTop}" x2="${x+bw/2+6}" y2="${yTop}" stroke="rgba(255,255,255,.25)" stroke-dasharray="3 3"/>`;
+      labelVal=f1(st.v);
+    } else if(st.type==="sub"){
+      running=st.v; yTop=yOf(st.v); yBot=zeroY; color="#fbbf24"; labelVal=f1(st.v);
+    } else {
+      running=st.v; yTop=yOf(Math.max(st.v,0)); yBot=zeroY;
+      color = st.n==="净利润" ? (st.v>=0?"#34d399":"#f87171") : "#38bdf8";
+      labelVal=f1(st.v);
+    }
+    s+=`<rect x="${x-bw/2}" y="${yTop}" width="${bw}" height="${Math.max(2,Math.abs(yBot-yTop))}" rx="3"
+         fill="${color}" fill-opacity="${st.type==='sub'?.85:.9}"><title>${st.n}：${f1(st.v)} 万（占营收 ${f1(st.v/sc.rev*100)}%）</title></rect>`;
+    s+=`<text x="${x}" y="${yTop-6}" fill="#e6ecf5" font-size="11" text-anchor="middle" font-weight="700">${labelVal}</text>`;
+    s+=`<text x="${x}" y="${H-22}" fill="#93a0b5" font-size="10.5" text-anchor="middle">${st.n}</text>`;
+    const ratio=st.type==="dec"?"":(st.v/sc.rev*100).toFixed(0)+"%";
+    if(ratio) s+=`<text x="${x}" y="${H-9}" fill="#6b7789" font-size="9.5" text-anchor="middle">${ratio}</text>`;
+  });
+  $("waterfall").innerHTML=s+"</svg>";
+}
 
-/* ---------- 促销 ROI ---------- */
-const badge = roi => roi>=2?`<span class="pill p-keep">保持并复制</span>`
-  : roi>=1.5?`<span class="pill p-less">缩量观察</span>`
-  : `<span class="pill p-stop">停投改造</span>`;
-el("promo").innerHTML = `<thead><tr><th>活动</th><th class="num">投入(万)</th><th class="num">增量营收(万)</th><th class="num">ROI</th><th>建议</th></tr></thead><tbody>`
- + PROMOS.map(p=>{const roi=p.inc/p.cost;
-   return `<tr><td>${p.n}</td><td class="num">${fmt(p.cost)}</td><td class="num">${fmt(p.inc)}</td>
-   <td class="num" style="font-weight:700;color:${roi>=2?"#34d399":roi>=1.5?"#fbbf24":"#f87171"}">${fmt(roi,2)}</td>
-   <td>${badge(roi)}</td></tr>`;}).join("")+"</tbody>";
+/* ---------- 品类双条 ---------- */
+function renderCats(){
+  const max=Math.max(...CATS.map(c=>Math.max(c.share, c.share*c.gm/.3876)));
+  $("cats").innerHTML=CATS.map(c=>{
+    const gc=c.share*c.gm/.3876;
+    return `<div class="cat-row">
+      <div class="cat-name">${c.n}</div>
+      <div class="cat-bars">
+        <div class="cat-track"><div class="cat-fill" style="width:${c.share/max*100}%;background:var(--cyan)"></div></div>
+        <div class="cat-track"><div class="cat-fill" style="width:${gc/max*100}%;background:var(--violet)"></div></div>
+      </div>
+      <div class="cat-gm">销 ${f1(c.share*100)}%<br>毛 ${f1(gc*100)}% · 率${f1(c.gm*100)}%</div>
+    </div>`;
+  }).join("");
+}
 
-/* ---------- 经营诊断（规则引擎） ---------- */
-const diag=[];
-STORES.filter(x=>x.np<0).forEach(x=>diag.push(["d-red","亏损预警 · "+x.name,
-  `本月净利 ${fmt(x.np)} 万（净利率 ${fmt(x.npm)}%），坪效 ${fmt(x.psf,0)} 元/㎡ 低于全网均值 ${fmt(T.psf,0)}。建议给 90 天改善窗口：压缩排班与低效 SKU、清理滞销库存，期末仍未转正则启动关停/转租评估。`]));
-const best=[...STORES].sort((a,b)=>b.npm-a.npm)[0];
-if(best.npm>=10) diag.push(["d-green","标杆复制 · "+best.name,
-  `净利率 ${fmt(best.npm)}% 为全网最高，坪效 ${fmt(best.psf,0)} 元/㎡。建议沉淀选址、排班、陈列 SOP，作为新店复制蓝本；店长纳入储备店长带教序列。`]);
-STORES.filter(x=>x.psf>T.psf && x.npm<6).forEach(x=>diag.push(["d-amber","费用谈判 · "+x.name,
-  `坪效 ${fmt(x.psf,0)} 元/㎡ 全网领先但净利率仅 ${fmt(x.npm)}%，问题在租金/扣点而非客流。建议与商场重谈扣点或物业条件：扣点每降 2pp，月增利约 ${fmt(x.rev*0.02)} 万。`]));
-STORES.filter(x=>x.gm*100<avgGm-5).forEach(x=>diag.push(["d-blue","毛利管控 · "+x.name,
-  `毛利率 ${fmt(x.gm*100)}% 低于全网均值 ${fmt(avgGm)}%。建议管控折扣深度、提高正价与新品占比，把毛利率拉回均值 5pp 内。`]));
-el("diag").innerHTML = diag.map(d=>`<div class="dcard ${d[0]}"><b>${d[1]}</b>${d[2]}</div>`).join("");
+/* ---------- ABC 帕累托 ---------- */
+function renderAbc(){
+  const i=state.month, sc=scopeAt(i,state.scope);
+  // 三段：A 0-8% SKU → 70% 销售；B 8-25% → 90%；C 25-100% → 100%
+  const W=420,H=190,L=36,R=40,TP=14,BP=30, iw=W-L-R, ih=H-TP-BP;
+  const zones=[[0,.08,"rgba(248,113,113,.12)","A",.70],[.08,.25,"rgba(251,191,36,.10)","B",.90],[.25,1,"rgba(56,189,248,.08)","C",1]];
+  const xOf=v=>L+iw*v, yOf=v=>TP+ih-v*ih;
+  let s=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">`;
+  [0,.25,.5,.75,1].forEach(v=>{
+    s+=`<line x1="${L}" y1="${yOf(v)}" x2="${W-R}" y2="${yOf(v)}" stroke="rgba(255,255,255,.06)"/>`;
+    s+=`<text x="${L-6}" y="${yOf(v)+3.5}" fill="#93a0b5" font-size="9" text-anchor="end">${v*100}%</text>`;
+  });
+  zones.forEach(z=>{
+    const x1=xOf(z[0]),x2=xOf(z[1]);
+    s+=`<rect x="${x1}" y="${TP}" width="${x2-x1}" height="${ih}" fill="${z[2]}"/>`;
+    s+=`<text x="${(x1+x2)/2}" y="${H-10}" fill="#93a0b5" font-size="10" text-anchor="middle">${z[3]}类 ${Math.round((z[1]-z[0])*100)}% SKU</text>`;
+  });
+  // 各级销售占比柱（落于区间中点）
+  const bars=[[.04,.70,"#f87171"],[.165,.20,"#fbbf24"],[.625,.10,"#38bdf8"]];
+  bars.forEach(b=>{
+    const x=xOf(b[0]), h=b[1]*ih;
+    s+=`<rect x="${x-22}" y="${yOf(b[1])}" width="44" height="${h}" rx="3" fill="${b[2]}" fill-opacity=".85"><title>${b[2]==="#f87171"?"A":b[2]==="#fbbf24"?"B":"C"}类：销售占比 ${b[1]*100}%</title></rect>`;
+  });
+  // 累计曲线
+  const curve=[[0,0],[.08,.70],[.25,.90],[1,1]];
+  s+=`<polyline points="${curve.map(p=>xOf(p[0])+","+yOf(p[1])).join(" ")}" fill="none" stroke="#e6ecf5" stroke-width="2"/>`;
+  curve.forEach(p=>s+=`<circle cx="${xOf(p[0])}" cy="${yOf(p[1])}" r="3" fill="#e6ecf5"/>`);
+  s+=`<text x="${W-R+6}" y="${yOf(.7)+3}" fill="#e6ecf5" font-size="9">70%</text>`;
+  s+=`<text x="${W-R+6}" y="${yOf(.9)+3}" fill="#e6ecf5" font-size="9">90%</text>`;
+  s+=`<text x="${W-R+6}" y="${yOf(1)+3}" fill="#e6ecf5" font-size="9">100%</text>`;
+  s+=`<text x="${L}" y="${H-24}" fill="#6b7789" font-size="9">SKU 累计占比 →</text>`;
+  $("abc").innerHTML=s+"</svg>";
+  $("invStats").innerHTML=[
+    ["在售 SKU", f0(sc.sku)+" 个"],
+    ["综合动销率", pct(sc.sellRate*100)],
+    ["滞销 SKU", f0(sc.slow)+" 个 · "+f1(sc.slow/sc.sku*100)+"%"],
+    ["库销比", f1(sc.isr)],
+  ].map(m=>`<div class="ms"><div class="v">${m[1]}</div><div class="l">${m[0]}</div></div>`).join("");
+}
+
+/* ---------- 供应商 ---------- */
+function renderSuppliers(){
+  const i=state.month;
+  const cogs = STORES.reduce((a,s)=>a+s.m[i].cogs,0);
+  const base = STORES.reduce((a,s)=>a+s.m[5].cogs,0); // 9月采购基准
+  const k = cogs/base;
+  const namedAmt=SUPPLIERS.reduce((a,x)=>a+x.amt*k,0);
+  const restAmt=Math.max(0,cogs-namedAmt);
+  const rows=SUPPLIERS.map(x=>{
+    const amt=x.amt*k, share=amt/cogs;
+    const gcls = x.grade==="A"?"p-a":x.grade==="B"?"p-b":"p-stop";
+    return `<tr>
+      <td>${x.n}<div style="color:var(--faint);font-size:10px;margin-top:1px">${x.note}</div></td>
+      <td class="num">${f1(amt)}</td>
+      <td class="num">${f1(share*100)}%</td>
+      <td class="num">${x.term} 天</td>
+      <td class="num" style="color:${x.arrive>=95?'var(--green)':'var(--red)'}">${x.arrive}%</td>
+      <td class="num">${x.pass}%</td>
+      <td><span class="pill ${gcls}">${x.grade} 级</span></td>
+    </tr>`;
+  }).join("") + `<tr style="color:var(--faint)">
+      <td>其他零散供应商（${Math.round(restAmt*10/cogs)}+ 家，单家份额 &lt;3%）</td>
+      <td class="num">${f1(restAmt)}</td>
+      <td class="num">${f1(restAmt/cogs*100)}%</td>
+      <td class="num">—</td><td class="num">—</td><td class="num">—</td><td>—</td></tr>`;
+  $("supplierTbl").innerHTML=`<thead><tr>
+    <th>供应商</th><th class="num">采购额(万)</th><th class="num">占采购比</th><th class="num">账期</th>
+    <th class="num">到货率</th><th class="num">质检合格率</th><th>评级</th></tr></thead><tbody>${rows}</tbody>`;
+
+  // 进价监控
+  $("priceWatch").innerHTML=PRICES.map(p=>{
+    const d=(p.cur-p.prev)/p.prev;
+    const pos=d>0.003, neg=d<-0.003;
+    const color=pos?"var(--red)":neg?"var(--green)":"var(--sub)";
+    // 位置：-6% ~ +6% 映射 5%~95%
+    const x=Math.max(5,Math.min(95,50+d*100/12*50));
+    return `<div class="price-row">
+      <span class="price-name">${p.n}</span>
+      <div class="price-track"><div class="price-mid"></div>
+        <div class="price-dot" style="left:${x}%;background:${color}"></div></div>
+      <span class="price-val" style="color:${color}">${p.cur.toFixed(2)}　${d>=0?"▲":"▼"}${f1(Math.abs(d)*100)}%</span>
+    </div>`;
+  }).join("");
+
+  // 采购结构
+  const weightedTerm=SUPPLIERS.reduce((a,x)=>a+x.term*x.amt,0)/SUPPLIERS.reduce((a,x)=>a+x.amt,0);
+  const arrAvg=SUPPLIERS.reduce((a,x)=>a+x.arrive*x.amt,0)/SUPPLIERS.reduce((a,x)=>a+x.amt,0);
+  const aShare=SUPPLIERS.filter(x=>x.grade==="A").reduce((a,x)=>a+x.amt,0)/SUPPLIERS.reduce((a,x)=>a+x.amt,0);
+  $("procStats").innerHTML=[
+    ["当月采购总额", f1(cogs)+" 万"],
+    ["加权平均账期", f0(weightedTerm)+" 天"],
+    ["加权到货率", f1(arrAvg)+"%"],
+    ["A 级供应商占比", f1(aShare*100)+"%"],
+  ].map(m=>`<div class="ms"><div class="v">${m[1]}</div><div class="l">${m[0]}</div></div>`).join("");
+}
+
+/* ---------- 促销 ---------- */
+function renderPromos(){
+  const rows=PROMOS.map(p=>{
+    const gpInc=p.inc*p.igm, roi=gpInc/p.cost, revRoi=p.inc/p.cost;
+    const [cls,tag] = roi>=1?["p-keep","保持并复制"]:roi>=.5?["p-less","缩量观察"]:["p-stop","停投改造"];
+    return `<tr>
+      <td>${p.n}</td>
+      <td class="num">${f1(p.cost)}</td>
+      <td class="num">${f1(p.inc)}</td>
+      <td class="num">${f1(gpInc)}</td>
+      <td class="num">${f1(revRoi)}x</td>
+      <td class="num" style="color:${roi>=1?'var(--green)':roi>=.5?'var(--amber)':'var(--red)'};font-weight:700">${f1(roi)}x</td>
+      <td class="num">${p.redeem}%</td>
+      <td><span class="pill ${cls}">${tag}</span></td>
+    </tr>`;
+  }).join("");
+  $("promo").innerHTML=`<thead><tr>
+    <th>活动</th><th class="num">投入(万)</th><th class="num">增量营收(万)</th><th class="num">增量毛利(万)</th>
+    <th class="num">营收 ROI</th><th class="num">毛利 ROI</th><th class="num">券核销率</th><th>决策</th></tr></thead>
+    <tbody>${rows}</tbody></table>`;
+}
+
+/* ---------- 诊断规则引擎 ---------- */
+function buildDiagnostics(){
+  const i=state.month, prev=i>0?scopeAt(i-1,state.scope):null;
+  const out=[];
+  const push=(kind,color,title,body,impact)=>out.push({kind,color,title,body,impact});
+
+  if(state.scope==="all"){
+    const net=scopeAt(i,"all");
+    // 1 亏损店
+    STORES.forEach(s=>{
+      const x=s.m[i];
+      if(x.np<0){
+        const laborTarget=s.rev[i]*.18;
+        push("risk","d-red",`亏损预警 · ${s.name}`,
+          `当月净利 ${f1(x.np)} 万（净利率 ${f1(x.npm)}%），已连续亏损；坪效 ${f0(x.psf)} 元/㎡ 低于全网 ${f0(net.psf)}，转化率 ${f1(x.conv)}% 持续走低。给 90 天改善窗口：压缩低效排班（人力费率 ${f1(x.labor/x.rev*100)}% → 目标 18%）、清退滞销 SKU、周边社区拉新；期末未转正启动关停/转租评估。`,
+          `月亏损 ${f1(-x.np)} 万 · 年化约 ${f0(-x.np*12)} 万 · 排班优化空间约 ${f1(x.labor-laborTarget)} 万/月`);
+      }
+    });
+    // 2 高坪效低净利 → 谈扣点
+    STORES.filter(s=>s.m[i].psf>net.psf && s.m[i].npm<6).forEach(s=>{
+      const x=s.m[i];
+      push("cost","d-amber",`费用谈判 · ${s.name}`,
+        `坪效 ${f0(x.psf)} 元/㎡ 全网领先但净利率仅 ${f1(x.npm)}%——问题在租金/扣点而非客流。凭坪效数据与商场重谈扣点或争取免租装修期，谈判不成则评估迁址至同客流低扣点点位。`,
+        `扣点每降 2pp，月增利约 ${f1(s.rev[i]*.02)} 万（年 ${f0(s.rev[i]*.02*12)} 万）`);
+    });
+    // 3 标杆复制
+    const best=[...STORES].sort((a,b)=>b.m[i].npm-a.m[i].npm)[0];
+    if(best.m[i].npm>=10){
+      push("grow","d-green",`标杆复制 · ${best.name}`,
+        `净利率 ${f1(best.m[i].npm)}% 全网最高、周转仅 ${best.m[i].turn} 天、动销率 ${f1(best.sellRate*100)}%。沉淀其选址模型、排班表、陈列与选品 SOP，作为新店复制蓝本；店长纳入储备店长带教序列。`,
+        `若全网净利率向其拉齐 3pp，月增利约 ${f1(net.rev*.03)} 万`);
+    }
+    // 4 低毛利 → 控折扣
+    STORES.filter(s=>s.m[i].gm < net.gmRate-5).forEach(s=>{
+      push("cost","d-blue",`毛利管控 · ${s.name}`,
+        `毛利率 ${f1(s.m[i].gm)}% 低于全网均值 ${f1(net.gmRate)}% 逾 5pp，折扣店长期深度打折侵蚀利润。管控折扣审批层级、提高正价与新品占比、用会员价替代全场降价，把毛利率拉回均值 5pp 内。`,
+        `毛利率每提升 1pp，月增利约 ${f1(s.rev[i]*.01)} 万`);
+    });
+    // 5 库存周转
+    STORES.filter(s=>s.m[i].turn>50).forEach(s=>{
+      const x=s.m[i];
+      push("risk","d-amber",`库存积压 · ${s.name}`,
+        `周转天数 ${f0(x.turn)} 天（健康线 ≤35 天），滞销 SKU ${f0(x.slow)} 个、占比 ${f1(x.slow/s.sku*100)}%，跌价与过季风险上升。启动滞销品清仓专项、暂停低动销品类补货、小批量高频补货拉周转。`,
+        `占压库存资金约 ${f1(x.inv)} 万 · 每缩短 10 天释放约 ${f1(x.cogs/3)} 万`);
+    });
+    // 6 转化短板
+    STORES.filter(s=>s.m[i].conv < net.conv*.8).forEach(s=>{
+      const x=s.m[i];
+      const target=x.visits*net.conv/100*x.aov/10000;
+      push("grow","d-blue",`转化提升 · ${s.name}`,
+        `进店转化率 ${f1(x.conv)}% 低于全网 ${f1(net.conv)}% 逾 20%，客流没有变成单子。优化高峰排班与动线、强化入口堆头与连带陈列、用社群券承接进店客。`,
+        `转化率追平全网 80% 水平，月增收约 ${f1(target-x.rev)} 万`);
+    });
+    // 7 供应商到货
+    const bad=SUPPLIERS.find(x=>x.arrive<95 && x.grade!=="A");
+    if(bad){
+      push("risk","d-amber",`供应商整改 · ${bad.n}`,
+        `当月到货率 ${bad.arrive}% 低于 95% 红线，缺货直接损失销售并拉低周转。书面触发履约扣罚，限期 30 天整改；同步引入备选供应商完成比价与小单验证，采购份额不超过单家 30%。`,
+        `缺货按 1% 销售损失估算，月影响约 ${f1(STORES.reduce((a,s)=>a+s.rev[i],0)*.01)} 万`);
+    }
+    // 8 促销停投
+    PROMOS.filter(p=>p.inc*p.igm/p.cost<.5).forEach(p=>{
+      push("cost","d-amber",`促销止损 · ${p.n}`,
+        `毛利 ROI 仅 ${f1(p.inc*p.igm/p.cost)}x、券核销率 ${p.redeem}%，活动在赔本赚吆喝。立即停投，预算转移到 ROI≥1 的会员日玩法；清仓改用临期专区自然出清。`,
+        `停投释放预算 ${f1(p.cost)} 万/期，转投高效活动预计增利 ${f1(p.cost*.5)} 万`);
+    });
+    // 9 品类机会
+    const bestCat=[...CATS].sort((a,b)=>b.gm-a.gm)[0];
+    push("grow","d-blue",`品类机会 · ${bestCat.n}`,
+      `${bestCat.n}毛利率 ${f1(bestCat.gm*100)}% 为全品类最高，当前销售占比 ${f1(bestCat.share*100)}%。扩大端架与关联陈列、与 A 级供应商谈联合促销返点，用高毛利品类置换低毛利货架。`,
+      `占比每提升 2pp，综合毛利率提升约 ${f1((bestCat.gm-.3876)*2)}pp`);
+  } else {
+    // 单店下钻诊断
+    const s=STORES.find(x=>x.id===state.scope), x=s.m[i];
+    const net=scopeAt(i,"all");
+    if(x.np<0){
+      push("risk","d-red","亏损 90 天改善窗口",
+        `净利率 ${f1(x.npm)}%。第 1–30 天：砍低效排班与 SKU、清滞销；第 31–60 天：社区拉新与会员激活；第 61–90 天复盘 P&L，仍未转正启动关停/转租。`,
+        `月亏损 ${f1(-x.np)} 万，90 天改善期止损上限 ${f1(-x.np*3)} 万`);
+    } else if(x.npm>=10){
+      push("grow","d-green","盈利模型健康",
+        `净利率 ${f1(x.npm)}% 达优秀线，重点是把模型文档化：选址参数、排班比、SKU 宽度与周转目标，形成可复制 SOP。`,
+        `可作为新店/弱店对标蓝本`);
+    }
+    if(x.turn>50) push("risk","d-amber","周转预警",
+      `周转 ${f0(x.turn)} 天、滞销占比 ${f1(x.slow/s.sku*100)}%。暂停尾部 SKU 补货，做清仓专项。`,
+      `占压资金 ${f1(x.inv)} 万`);
+    if(x.conv<net.conv) push("grow","d-blue","转化低于全网",
+      `本店 ${f1(x.conv)}% vs 全网 ${f1(net.conv)}%。盯高峰小时排班、入口陈列与连带推荐。`,
+      `每提升 0.5pp 月增收约 ${f1(x.visits*.005*x.aov/10000)} 万`);
+    if(x.gm<net.gmRate-2) push("cost","d-amber","毛利低于全网",
+      `本店 ${f1(x.gm)}% vs 全网 ${f1(net.gmRate)}%。控折扣深度、提升新品占比。`,
+      `每提升 1pp 月增利 ${f1(s.rev[i]*.01)} 万`);
+    if(s.yoy<0) push("risk","d-amber","同店负增长",
+      `同比 ${pPct(s.yoy)}（SSSG），商圈客流被分流。加大社群与外卖到家渠道覆盖，重做会员召回。`,
+      `恢复至全网均速约需月补 ${f1(s.rev[i]*(1.085-(1+s.yoy)))} 万营收`);
+  }
+  // 环比异常（全网/单店通用）
+  if(prev){
+    const sc=scopeAt(i,state.scope);
+    if(sc.npm-prev.npm<-1.5){
+      push("risk","d-amber","净利率环比大幅下滑",
+        `净利率环比 ${ppm(sc.npm-prev.npm)}，费用率刚性而营收增速不足。复核本月新增费用与折扣投放，下月预算按变动费率重定。`,
+        `净利环比减少 ${f1(prev.np-sc.np)} 万`);
+    }
+  }
+  return out;
+}
+
+const KIND_LABEL={all:"全部",grow:"增收机会",cost:"降本增效",risk:"风险预警"};
+function renderDiags(){
+  const all=buildDiagnostics();
+  $("diagTags").innerHTML=Object.entries(KIND_LABEL).map(([k,v])=>{
+    const n=k==="all"?all.length:all.filter(d=>d.kind===k).length;
+    return `<span class="dtag ${state.diagFilter===k?'on':''}" data-f="${k}">${v} ${n}</span>`;
+  }).join("");
+  const list=(state.diagFilter==="all"?all:all.filter(d=>d.kind===state.diagFilter));
+  $("diag").innerHTML=list.length?list.map(d=>`
+    <div class="dcard ${d.color}">
+      <div class="dh">${d.title}<span class="kind">${KIND_LABEL[d.kind]}</span></div>
+      <div>${d.body}</div>
+      ${d.impact?`<div class="impact">测算：${d.impact}</div>`:""}
+    </div>`).join("")
+    : `<div style="grid-column:1/-1;color:var(--faint);font-size:12px;padding:14px">该分类下暂无异常项 ✅</div>`;
+}
+
+/* ---------- 总渲染 ---------- */
+function renderAll(){
+  renderControls();
+  renderKpis();
+  renderTrend();
+  renderStoreTable();
+  renderWaterfall();
+  renderAbc();
+  renderSuppliers();
+  renderDiags();
+}
+
+/* ---------- 事件 ---------- */
+$("monthSeg").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-m]"); if(!b) return;
+  state.month=+b.dataset.m; renderAll();
+});
+$("storeSel").addEventListener("change",e=>{ state.scope=e.target.value; renderAll(); });
+$("trend").addEventListener("click",e=>{
+  const r=e.target.closest("rect.mbar"); if(!r) return;
+  state.month=+r.dataset.m; renderAll();
+});
+$("storeTbl").addEventListener("click",e=>{
+  const tr=e.target.closest("tr[data-store]"); if(!tr) return;
+  state.scope = state.scope===tr.dataset.store ? "all" : tr.dataset.store;
+  $("storeSel").value=state.scope; renderAll();
+});
+$("diagTags").addEventListener("click",e=>{
+  const t=e.target.closest(".dtag"); if(!t) return;
+  state.diagFilter=t.dataset.f; renderDiags();
+});
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="SELECT") return;
+  if(e.key==="ArrowLeft" && state.month>0){ state.month--; renderAll(); }
+  if(e.key==="ArrowRight" && state.month<5){ state.month++; renderAll(); }
+});
+
+/* 静态模块（不随筛选变化） */
+renderCats();
+renderPromos();
+renderAll();
 </script>
 </body>
 </html>
